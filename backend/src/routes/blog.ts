@@ -1,13 +1,43 @@
 import { Hono } from "hono";
+import { PrismaClient } from "@prisma/client/edge";
+import { withAccelerate } from "@prisma/extension-accelerate";
 
-const blogRoutes = new Hono();
+const blogRoutes = new Hono<{
+  Bindings: {
+    DATABASE_URL: string;
+  };
+}>();
 
-blogRoutes.get('/', (c) => c.text("List all blogs"));
+blogRoutes.get("/", (c) => {
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
 
-blogRoutes.get('/:id', (c) => c.text("List blog with id"));
+  return c.text("List all blogs");
+});
 
-blogRoutes.post('/', (c) => c.text("Post a blog"));
+blogRoutes.get("/:id", (c) => {
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
 
-blogRoutes.delete('/:id', (c) => c.text("Deleted a blog"));
+  return c.text("List all blogs");
+});
+
+blogRoutes.post("/", (c) => {
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  return c.text("List all blogs");
+});
+
+blogRoutes.delete("/:id", (c) => {
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  return c.text("List all blogs");
+});
 
 export default blogRoutes;

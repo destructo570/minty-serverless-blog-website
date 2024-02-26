@@ -7,3 +7,4 @@ node_modules/
 # Ignore environment-specific files
 .env
 **/.env
+backend/wrangler.toml

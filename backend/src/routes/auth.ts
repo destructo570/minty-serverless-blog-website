@@ -29,7 +29,7 @@ authRoutes.post("/signin", async (c) => {
     c.status(403);
     return c.json({ error: "User not found" });
   }
-
+  
   const token = await sign(
     { id: user.id, exp: getTokenExpiryTime() },
     c.env.JWT_SECRET

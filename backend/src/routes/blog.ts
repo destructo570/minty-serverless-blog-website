@@ -24,36 +24,84 @@ blogRoutes.use("/*", async (c, next) => {
   }
 });
 
-blogRoutes.get("/", (c) => {
+blogRoutes.get("/", async (c) => {
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
   }).$extends(withAccelerate());
 
-  return c.text("List all blogs");
+  const posts = await prisma.post.findMany();
+
+  return c.json({ posts });
 });
 
-blogRoutes.get("/:id", (c) => {
+blogRoutes.get("/:id", async (c) => {
+  const id = c.req.param("id");
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
   }).$extends(withAccelerate());
 
-  return c.text("List all blogs");
+  const post = await prisma.post.findUnique({
+    where: {
+      id,
+    },
+  });
+
+  return c.json({ post });
 });
 
-blogRoutes.post("/", (c) => {
+blogRoutes.post("/", async (c) => {
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
   }).$extends(withAccelerate());
 
-  return c.text("List all blogs");
+  const body = await c.req.json();
+
+  const post = await prisma.post.create({
+    data: {
+      title: body.title,
+      content: body.content,
+      authorId: body.authorId,
+    },
+  });
+
+  return c.json({ post });
 });
 
-blogRoutes.delete("/:id", (c) => {
+blogRoutes.put("/:id", async (c) => {
+  const id = c.req.param("id");
+
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
   }).$extends(withAccelerate());
 
-  return c.text("List all blogs");
+  const body = await c.req.json();
+
+  const post = await prisma.post.update({
+    where: {
+      id,
+      authorId: body.authorId,
+    },
+    data: {
+      title: body.title,
+      content: body.content,
+    },
+  });
+
+  return c.json({ post });
+});
+
+blogRoutes.delete("/:id", async (c) => {
+  const id = c.req.param("id");
+
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  const post = await prisma.post.delete({
+    where: { id },
+  });
+
+  return c.json({ post });
 });
 
 export default blogRoutes;

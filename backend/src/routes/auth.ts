@@ -1,26 +1,65 @@
 import { Hono } from "hono";
 import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
+import { sign } from "hono/jwt";
+import { getTokenExpiryTime } from "../../utils/helper";
 
 const authRoutes = new Hono<{
   Bindings: {
-    DATABASE_URL: string
-  }
+    DATABASE_URL: string;
+    JWT_SECRET: string;
+  };
 }>();
 
-authRoutes.get("/signin", (c) => {
+authRoutes.get("/signin", async (c) => {
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
   }).$extends(withAccelerate());
 
-  return c.text("List all blogs");
+  const body = await c.req.json();
+
+  const user = await prisma.user.findUnique({
+    where: {
+      email: body.email,
+      password: body.password,
+    },
+  });
+
+  if (!user) {
+    c.status(403);
+    return c.json({ error: "User not found" });
+  }
+
+  const token = await sign(
+    { id: user.id, exp: getTokenExpiryTime() },
+    c.env.JWT_SECRET
+  );
+  return c.json({ token });
 });
 
-authRoutes.get("/signup", (c) => {
+authRoutes.post("/signup", async (c) => {
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
   }).$extends(withAccelerate());
 
-  return c.text("List all blogs");
+  const body = await c.req.json();
+
+  const user = await prisma.user.create({
+    data: {
+      email: body.email,
+      password: body.password,
+    },
+  });
+
+  if (!user) {
+    c.status(403);
+    return c.json({ error: "User not found" });
+  }
+
+  const token = await sign(
+    { id: user.id, exp: getTokenExpiryTime() },
+    c.env.JWT_SECRET
+  );
+  return c.json({ token });
 });
 export default authRoutes;

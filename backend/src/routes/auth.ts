@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { sign } from "hono/jwt";
 import { getTokenExpiryTime } from "../../utils/helper";
+import { signinInput, signupInput } from "@destructo570/minty-common";
 
 const authRoutes = new Hono<{
   Bindings: {
@@ -17,6 +18,12 @@ authRoutes.post("/signin", async (c) => {
   }).$extends(withAccelerate());
 
   const body = await c.req.json();
+  const { success } = signinInput.safeParse(body);
+
+  if (!success) {
+    c.status(400);
+    return c.json({ error: "Invalid input" });
+  }
 
   const user = await prisma.user.findUnique({
     where: {
@@ -29,7 +36,7 @@ authRoutes.post("/signin", async (c) => {
     c.status(403);
     return c.json({ error: "User not found" });
   }
-  
+
   const token = await sign(
     { id: user.id, exp: getTokenExpiryTime() },
     c.env.JWT_SECRET
@@ -43,6 +50,12 @@ authRoutes.post("/signup", async (c) => {
   }).$extends(withAccelerate());
 
   const body = await c.req.json();
+  const { success } = signupInput.safeParse(body);
+
+  if (!success) {
+    c.status(400);
+    return c.json({ error: "Invalid input" });
+  }
 
   const user = await prisma.user.create({
     data: {
